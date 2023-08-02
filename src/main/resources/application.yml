@@ -1,10 +1,10 @@
 # Spring Boot configuration
 spring:
-  #application:
-   # name: service
-  #main:
-   # allow-bean-definition-overriding: true
-   # lazy-initialization: true
+  application:
+    name: employee-service
+    #main:
+    # allow-bean-definition-overriding: true
+    # lazy-initialization: true
   # Database
   datasource:
     driver-class-name: org.postgresql.Driver

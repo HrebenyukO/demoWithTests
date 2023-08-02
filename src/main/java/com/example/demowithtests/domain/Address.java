@@ -1,8 +1,7 @@
 package com.example.demowithtests.domain;
 
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter

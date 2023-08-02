@@ -4,7 +4,7 @@ import com.example.demowithtests.domain.Employee;
 import com.example.demowithtests.dto.EmployeeDto;
 import com.example.demowithtests.dto.EmployeeReadDto;
 import com.example.demowithtests.service.EmployeeService;
-import com.example.demowithtests.util.config.EmployeeConverter;
+import com.example.demowithtests.util.mappers.EmployeeMapper;
 import com.example.demowithtests.web.EmployeeController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -52,28 +52,27 @@ public class ControllerTests {
     EmployeeService service;
 
     @MockBean
-    EmployeeConverter employeeConverter;
+    EmployeeMapper employeeMapper;
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("POST /api/users")
+    @DisplayName("POST API -> /api/users")
     @WithMockUser(roles = "ADMIN")
     public void createPassTest() throws Exception {
 
-        var response = new EmployeeDto();
-        response.id = 1;
-        response.name = "Mike";
-        response.email = "mail@mail.com";
+        EmployeeDto response = new EmployeeDto(
+                1, "Mike", "England", "mail@mail.com",
+                null, null, null);
 
         var employee = Employee.builder()
                 .id(1)
                 .name("Mike")
                 .email("mail@mail.com").build();
 
-        when(employeeConverter.fromDto(any(EmployeeDto.class))).thenReturn(employee);
-        when(employeeConverter.toDto(any(Employee.class))).thenReturn(response);
+        when(employeeMapper.toEmployee(any(EmployeeDto.class))).thenReturn(employee);
+        when(employeeMapper.toEmployeeDto(any(Employee.class))).thenReturn(response);
         when(service.create(any(Employee.class))).thenReturn(employee);
 
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
@@ -91,20 +90,20 @@ public class ControllerTests {
     }
 
     @Test
-    @DisplayName("Entity POST /api/users")
-    @WithMockUser(roles = "ADMIN")
-    public void testEntitySave() throws Exception {
+    @DisplayName("POST API -> /api/users/jpa")
+    @WithMockUser(roles = "USER")
+    public void testSaveWithJpa() throws Exception {
 
         var employeeToBeReturn = Employee.builder()
                 .id(1)
                 .name("Mark")
                 .country("France").build();
 
-        doReturn(employeeToBeReturn).when(service).create(any());
-        when(this.service.create(any(Employee.class))).thenReturn(employeeToBeReturn);
+        doReturn(employeeToBeReturn).when(service).createWithJpa(any());
+        when(this.service.createWithJpa(any(Employee.class))).thenReturn(employeeToBeReturn);
         // Execute the POST request
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
-                .post("/api/usersS")
+                .post("/api/users/jpa")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(employeeToBeReturn));
         mockMvc
@@ -112,12 +111,12 @@ public class ControllerTests {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse();
 
-        verify(this.service, times(1)).create(any(Employee.class));
+        verify(this.service, times(1)).createWithJpa(any(Employee.class));
         verifyNoMoreInteractions(this.service);
     }
 
     @Test
-    @DisplayName("GET /api/users/{id}")
+    @DisplayName("GET API -> /api/users/{id}")
     @WithMockUser(roles = "USER")
     public void getPassByIdTest() throws Exception {
 
@@ -130,7 +129,7 @@ public class ControllerTests {
                 .name("Mike")
                 .build();
 
-        when(employeeConverter.toReadDto(any(Employee.class))).thenReturn(response);
+        when(employeeMapper.toEmployeeReadDto(any(Employee.class))).thenReturn(response);
         when(service.getById(1)).thenReturn(employee);
 
         MockHttpServletRequestBuilder mockRequest = get("/api/users/1");
@@ -144,19 +143,20 @@ public class ControllerTests {
     }
 
     @Test
-    @DisplayName("PUT /api/users/{id}")
+    @DisplayName("PUT API -> /api/users/{id}")
     @WithMockUser(roles = "ADMIN")
     public void updatePassByIdTest() throws Exception {
-        //var response = new EmployeeDto();
-        //response.id = 1;
+        var response = new EmployeeReadDto();
+        response.id = 1;
         var employee = Employee.builder().id(1).build();
 
-        //when(employeeConverter.toDto(any(Employee.class))).thenReturn(response);
-        //when(employeeConverter.fromDto(any(EmployeeDto.class))).thenReturn(employee);
+        when(employeeMapper.toEmployee(any(EmployeeDto.class))).thenReturn(employee);
         when(service.updateById(eq(1), any(Employee.class))).thenReturn(employee);
+        when(employeeMapper.toEmployeeReadDto(any(Employee.class))).thenReturn(response);
 
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .put("/api/users/1")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(employee));
 
@@ -168,14 +168,15 @@ public class ControllerTests {
     }
 
     @Test
-    @DisplayName("PATCH /api/users/{id}")
+    @DisplayName("DELETE API -> /api/users/{id}")
     @WithMockUser(roles = "ADMIN")
     public void deletePassTest() throws Exception {
 
         doNothing().when(service).removeById(1);
 
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
-                .patch("/api/users/1");
+                .delete("/api/users/1")
+                .with(csrf());
 
         mockMvc.perform(mockRequest)
                 .andExpect(status().isNoContent());
@@ -184,27 +185,37 @@ public class ControllerTests {
     }
 
     @Test
-    @DisplayName("GET /api/users/p")
+    @DisplayName("GET API -> /api/users/pages")
     @WithMockUser(roles = "USER")
     public void getUsersPageTest() throws Exception {
 
-        var employee1 = Employee.builder().id(1).name("John").country("US").build();
-        var employee2 = Employee.builder().id(2).name("Jane").country("UK").build();
-        var employee3 = Employee.builder().id(3).name("Bob").country("US").build();
+        var employee = Employee.builder().id(1).name("John").country("US").build();
+        var employeeTwo = Employee.builder().id(2).name("Jane").country("UK").build();
+        var employeeThree = Employee.builder().id(3).name("Bob").country("US").build();
 
-        List<Employee> list = Arrays.asList(employee1, employee2, employee3);
+        List<Employee> list = Arrays.asList(employee, employeeTwo, employeeThree);
         Page<Employee> employeesPage = new PageImpl<>(list);
         Pageable pageable = PageRequest.of(0, 5);
 
-        when(service.getAllWithPagination(eq(pageable))).thenReturn(employeesPage);
+        EmployeeReadDto dto = new EmployeeReadDto();
+        EmployeeReadDto dtoTwo = new EmployeeReadDto();
+        EmployeeReadDto dtoThree = new EmployeeReadDto();
 
-        MvcResult result = mockMvc.perform(get("/api/users/p")
+        when(service.getAllWithPagination(eq(pageable))).thenReturn(employeesPage);
+        when(employeeMapper.toEmployeeReadDto(employee)).thenReturn(dto);
+        when(employeeMapper.toEmployeeReadDto(employeeTwo)).thenReturn(dtoTwo);
+        when(employeeMapper.toEmployeeReadDto(employeeThree)).thenReturn(dtoThree);
+
+        MvcResult result = mockMvc.perform(get("/api/users/pages")
                         .param("page", "0")
                         .param("size", "5"))
                 .andExpect(status().isOk())
                 .andReturn();
 
         verify(service).getAllWithPagination(eq(pageable));
+        verify(employeeMapper, times(1)).toEmployeeReadDto(employee);
+        verify(employeeMapper, times(1)).toEmployeeReadDto(employeeTwo);
+        verify(employeeMapper, times(1)).toEmployeeReadDto(employeeThree);
 
         String contentType = result.getResponse().getContentType();
         assertNotNull(contentType);

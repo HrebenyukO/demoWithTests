@@ -12,7 +12,7 @@ public interface EmployeeService {
 
     Employee create(Employee employee);
 
-    Employee createEM(Employee employee);
+    Employee createWithJpa(Employee employee);
 
     List<Employee> getAll();
 
@@ -56,5 +56,7 @@ public interface EmployeeService {
     List<Employee> filterByCountry(String country);
 
     Set<String> sendEmailsAllUkrainian();
+
+    List<Employee> findByNameContaining(String name);
 
 }
