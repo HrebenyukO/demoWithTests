@@ -8,6 +8,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Collection;
 
 import static com.example.demowithtests.util.annotations.LogColorConstants.ANSI_BLUE;
@@ -17,13 +18,15 @@ import static com.example.demowithtests.util.annotations.LogColorConstants.ANSI_
 @Aspect
 @Component
 public class LoggingServiceClassesAspect {
-
+private long timeBefore;
+private long timeAfter;
     @Pointcut("execution(public * com.example.demowithtests.service.*ServiceBean.*(..))")
     public void callAtMyServicesPublicMethods() {
     }
 
     @Before("callAtMyServicesPublicMethods()")
     public void logBefore(JoinPoint joinPoint) {
+        timeBefore=System.currentTimeMillis();
         String methodName = joinPoint.getSignature().toShortString();
         Object[] args = joinPoint.getArgs();
         if (args.length > 0) {
@@ -35,6 +38,7 @@ public class LoggingServiceClassesAspect {
 
     @AfterReturning(value = "callAtMyServicesPublicMethods()", returning = "returningValue")
     public void logAfter(JoinPoint joinPoint, Object returningValue) {
+        timeAfter=System.currentTimeMillis();
         String methodName = joinPoint.getSignature().toShortString();
         Object outputValue;
         if (returningValue != null) {
@@ -45,9 +49,11 @@ public class LoggingServiceClassesAspect {
             } else {
                 outputValue = returningValue;
             }
-            log.debug(ANSI_BLUE + "Service: " + methodName + " - end. Returns - {}" + ANSI_RESET, outputValue);
-        } else {
-            log.debug(ANSI_BLUE + "Service: " + methodName + " - end." + ANSI_RESET);
+            log.debug(ANSI_BLUE + "Service: " + methodName +" LEAD TIME= "+ (timeAfter-timeBefore)+" ms"+
+                    " - end. Returns - {}" + ANSI_RESET, outputValue);
+                   } else {
+            log.debug(ANSI_BLUE + "Service: " + methodName + " LEAD TIME= "+ (timeAfter-timeBefore)+" ms, "+
+                    " - end." + ANSI_RESET);
         }
     }
 }

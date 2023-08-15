@@ -12,7 +12,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-        public class SecurityConfig {
+public class SecurityConfig {
 
     //TODO: 30-July-23 Create 2 users for demo
     @Bean
