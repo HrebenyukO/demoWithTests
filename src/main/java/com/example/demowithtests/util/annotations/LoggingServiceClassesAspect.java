@@ -18,7 +18,7 @@ import static com.example.demowithtests.util.annotations.LogColorConstants.ANSI_
 @Component
 public class LoggingServiceClassesAspect {
 
-    @Pointcut("execution(public * com.example.demowithtests.service.EmployeeServiceBean.*(..))")
+    @Pointcut("execution(public * com.example.demowithtests.service.*ServiceBean.*(..))")
     public void callAtMyServicesPublicMethods() {
     }
 
