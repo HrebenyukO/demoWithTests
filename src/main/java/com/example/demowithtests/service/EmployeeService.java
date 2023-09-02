@@ -16,6 +16,8 @@ public interface EmployeeService {
 
     List<Employee> getAll();
 
+    List<Employee> getFirstEmployees(Integer count);
+
     Page<Employee> getAllWithPagination(Pageable pageable);
 
     Employee getById(Integer id);

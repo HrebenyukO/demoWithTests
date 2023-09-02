@@ -164,4 +164,12 @@ public class EmployeeController {
         log.debug("findByNameContaining() EmployeeController - end: employees = {}", employees.size());
         return employees;
     }
+
+
+    @GetMapping("/users/findFirst")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Employee> getFirstEmployees(@RequestParam(value = "value") Integer value) {
+        return employeeService.getFirstEmployees(value);
+    }
+
 }

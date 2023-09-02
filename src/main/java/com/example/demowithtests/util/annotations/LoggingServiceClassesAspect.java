@@ -20,7 +20,7 @@ import static com.example.demowithtests.util.annotations.LogColorConstants.ANSI_
 public class LoggingServiceClassesAspect {
 private long timeBefore;
 private long timeAfter;
-    @Pointcut("execution(public * com.example.demowithtests.service.*ServiceBean.*(..))")
+    @Pointcut("execution(public * com.example.demowithtests.service.*.*(..))")
     public void callAtMyServicesPublicMethods() {
     }
 

@@ -49,6 +49,7 @@ public class EmployeeServiceBean implements EmployeeService {
 
     @Override
     public List<Employee> getAll() {
+
         return employeeRepository.findAll();
     }
 
@@ -204,5 +205,11 @@ public class EmployeeServiceBean implements EmployeeService {
     @Override
     public List<Employee> findByNameContaining(String name) {
         return employeeRepository.findByNameContaining(name);
+    }
+
+
+    @Override
+    public List<Employee> getFirstEmployees(Integer id) {
+        return employeeRepository.findFirstEmployee(id);
     }
 }
