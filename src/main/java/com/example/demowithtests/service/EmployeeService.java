@@ -61,4 +61,11 @@ public interface EmployeeService {
 
     List<Employee> findByNameContaining(String name);
 
+    void updateEmployeeByName(String name, Integer id);
+
+    Integer updateEmployeeById(Integer id, Employee employee);
+
+    void removeByIdMyVersion(Integer id);
+    Integer createReturnId(Employee employee);
+
 }

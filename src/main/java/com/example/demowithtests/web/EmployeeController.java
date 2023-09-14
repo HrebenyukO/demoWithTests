@@ -102,12 +102,27 @@ public class EmployeeController {
         return dto;
     }
 
+    @PutMapping("/users/names/body/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Employee refreshEmployeeNameBody(@PathVariable("id") Integer id, @RequestParam String employeeName) {
+        log.debug("refreshEmployeeName() EmployeeController - start: id = {}", id);
+        employeeService.updateEmployeeByName(employeeName, id);
+        Employee employee = employeeService.getById(id);
+        log.debug("refreshEmployeeName() EmployeeController - end: id = {}", id);
+        return employee;
+    }
+
     @DeleteMapping("/users/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeEmployeeById(@PathVariable Integer id) {
         employeeService.removeById(id);
     }
 
+    @DeleteMapping("/users/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeById(@PathVariable(name = "id") Integer id) {
+        employeeService.removeByIdMyVersion(id);
+    }
     @DeleteMapping("/users")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAllUsers() {
@@ -171,5 +186,21 @@ public class EmployeeController {
     public List<Employee> getFirstEmployees(@RequestParam(value = "value") Integer value) {
         return employeeService.getFirstEmployees(value);
     }
+
+
+    @PostMapping("/users-new")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "This is endpoint to add a new employee.", description = "Create request to add a new employee.", tags = {"Employee"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "CREATED. The new employee is successfully created and added to database."),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND. Specified employee request not found."),
+            @ApiResponse(responseCode = "409", description = "Employee already exists")})
+    public Integer saveEmployeeNew(@RequestBody @Valid EmployeeDto request) {
+        log.debug("saveEmployee() - start: requestForSave = {}", request.name());
+        var employee = employeeMapper.toEmployee(request);
+        return employeeService.createReturnId(employee);
+    }
+
 
 }

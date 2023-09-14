@@ -60,7 +60,6 @@ public class EmployeeServiceBean implements EmployeeService {
         log.debug("getAllWithPagination() - end: list = {}", list);
         return list;
     }
-
     @Override
     public Employee getById(Integer id) {
         var employee = employeeRepository.findById(id)
@@ -71,6 +70,19 @@ public class EmployeeServiceBean implements EmployeeService {
         }*/
         return employee;
     }
+    @Override
+    public void updateEmployeeByName(String name, Integer id) {
+        /*var employee = employeeRepository.findById(id)
+                .map(entity -> {
+                    entity.setName(name);
+                    return employeeRepository.save(entity);
+                })
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found with id = " + id));
+        return employee;*/
+
+        employeeRepository.updateEmployeeByName(name, id);
+    }
+
 
     @Override
     public Employee updateById(Integer id, Employee employee) {
@@ -87,11 +99,11 @@ public class EmployeeServiceBean implements EmployeeService {
     @Override
     public void removeById(Integer id) {
         //repository.deleteById(id);
-        var employee = employeeRepository.findById(id)
+        //var employee = employeeRepository.findById(id)
                 // .orElseThrow(() -> new EntityNotFoundException("Employee not found with id = " + id));
-                .orElseThrow(ResourceWasDeletedException::new);
+              //  .orElseThrow(ResourceWasDeletedException::new);
         //employee.setIsDeleted(true);
-        employeeRepository.delete(employee);
+        employeeRepository.deleteById(id);
         //repository.save(employee);
     }
 
@@ -211,5 +223,31 @@ public class EmployeeServiceBean implements EmployeeService {
     @Override
     public List<Employee> getFirstEmployees(Integer id) {
         return employeeRepository.findFirstEmployee(id);
+    }
+
+    @Override
+    public Integer updateEmployeeById(Integer id, Employee employee) {
+        return employeeRepository.updateEmployee(
+                employee.getName(),
+                employee.getEmail(),
+                employee.getCountry(),
+                id
+        );
+    }
+    @Override
+    @Transactional
+    public void removeByIdMyVersion(Integer id) {
+        employeeRepository.deleteAddressById(id);
+        employeeRepository.deleteEmployeeById(id);
+    }
+
+
+    @Override
+    @Transactional
+    @ActivateCustomAnnotations({Name.class, ToLowerCase.class})
+    public Integer createReturnId(Employee employee) {
+        return employeeRepository.saveEmployee(
+                employee.getName(), employee.getEmail(), employee.getCountry(), String.valueOf(employee.getGender())
+        );
     }
 }

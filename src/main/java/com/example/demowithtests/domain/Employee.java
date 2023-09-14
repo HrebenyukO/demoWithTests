@@ -29,7 +29,7 @@ public final class Employee {
     @ToLowerCase
     private String email;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
     @OrderBy("id desc, country asc")
     private Set<Address> addresses = new HashSet<>();
